@@ -1,10 +1,12 @@
-package com.atguigu.scw.common.config;
+package com.atguigu.scw.controller;
 
 
+import com.atguigu.scw.Vo.MemberRequestVo;
 import com.atguigu.scw.common.Consts.AppConsts;
 import com.atguigu.scw.common.Template.SmsTemplate;
 import com.atguigu.scw.common.utils.AppResponse;
 import com.atguigu.scw.common.utils.ScwUtils;
+import com.atguigu.scw.service.MemberService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -12,6 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Time;
@@ -29,6 +32,9 @@ public class userController {
     ScwUtils scwUtils;
     @Autowired
     SmsTemplate smsTemplate;
+    @Autowired
+    MemberService memberService;
+
     /**
      * 要进行以下验证
      * 1.验证手机号格式是否正确
@@ -41,7 +47,7 @@ public class userController {
      */
     @ApiOperation("给手机发送短信验证码的方法")
     @ApiImplicitParams(@ApiImplicitParam(name="phoneNum" ,required = false, value = "手机号码"))
-    public Object sendSms(String phoneNum){
+    public AppResponse<Object> sendSms(String phoneNum){
         //1.判断手机格式是否正确
         boolean b = scwUtils.isMobilePhone(phoneNum);
         if(!b ){
@@ -84,6 +90,33 @@ public class userController {
         //
         redisTemplate.opsForValue().set(AppConsts.CODE_PREFIX + phoneNum + AppConsts.CODE_COUNT_SUFFIX,count+"" ,expire,TimeUnit.MINUTES);
         return AppResponse.ok("发送短信成功",null);
+    }
+
+    /**
+     * 注册用户
+     * 1.检查验证码是否真确
+     * 2.检查手机号对应的验证码是否正确
+     * 3.完成注册
+     * @param vo
+     * @return
+     */
+    @ApiOperation("用户注册的方法")
+    @PostMapping("/user/doRegister")
+    public Object doRegist(MemberRequestVo vo){
+        //1.检查验证码是否正确
+        String loginacct = vo.getLoginacct(); //loginacct就是登陆名，就是用手机号登陆的，所以可以
+        String code = redisTemplate.opsForValue().get(AppConsts.CODE_PREFIX + loginacct + AppConsts.CODE_COUNT_SUFFIX);
+        if(StringUtils.isEmpty(code)){
+           return AppResponse.fail("验证码失效",null);
+        }
+        if(!loginacct.equals(code)){
+            return AppResponse.fail("验证码错误",null);
+        }
+        //储存用户信息
+        memberService.saveMember(vo);
+        //删除redis中该存储了信息的手机验证码
+        redisTemplate.delete(AppConsts.CODE_PREFIX + loginacct + AppConsts.CODE_COUNT_SUFFIX);
+        return AppResponse.ok("注册成功",null);
     }
 
 }
