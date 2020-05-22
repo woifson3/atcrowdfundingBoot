@@ -102,7 +102,7 @@ public class userController {
      */
     @ApiOperation("用户注册的方法")
     @PostMapping("/user/doRegister")
-    public Object doRegist(MemberRequestVo vo){
+    public AppResponse<Object> doRegist(MemberRequestVo vo){
         //1.检查验证码是否正确
         String loginacct = vo.getLoginacct(); //loginacct就是登陆名，就是用手机号登陆的，所以可以
         String code = redisTemplate.opsForValue().get(AppConsts.CODE_PREFIX + loginacct + AppConsts.CODE_COUNT_SUFFIX);
@@ -119,4 +119,15 @@ public class userController {
         return AppResponse.ok("注册成功",null);
     }
 
+    /**
+     * 用户登陆
+     * 1.
+     * @param loginacct
+     * @param userpwsd
+     * @return
+     */
+    public AppResponse<Object> doLogin(String loginacct ,String userpwsd){
+
+        return AppResponse.ok("登陆成功",null);
+    }
 }
