@@ -61,7 +61,7 @@ public class MemberServiceImpl implements MemberService {
         //对输入的密码判断是否真确：userpwsd和数据库中查询到的密码进行对比
         boolean b = bCryptPasswordEncoder.matches(userpwsd, member.getUserpswd());
         if(!b){
-            return null;
+            return cc;
         }
 
         //擦除重要信息
