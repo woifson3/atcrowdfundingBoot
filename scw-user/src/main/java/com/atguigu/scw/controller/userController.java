@@ -1,7 +1,10 @@
 package com.atguigu.scw.controller;
 
 
+import com.alibaba.fastjson.JSON;
 import com.atguigu.scw.Vo.MemberRequestVo;
+import com.atguigu.scw.Vo.MemberResponseVo;
+import com.atguigu.scw.bean.TMember;
 import com.atguigu.scw.common.Consts.AppConsts;
 import com.atguigu.scw.common.Template.SmsTemplate;
 import com.atguigu.scw.common.utils.AppResponse;
@@ -11,11 +14,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import springfox.documentation.spring.web.json.Json;
 
 import java.sql.Time;
 import java.util.HashMap;
@@ -121,13 +126,33 @@ public class userController {
 
     /**
      * 用户登陆
-     * 1.
+     * 1.查询出数据库里面的对象信息
+     * 2.将对象放入到redis中，生成一个key。为了实现分布式单点登陆功能
+     * 3.把key返回给前台操作系统
+     * 4.响应回前台数据
      * @param loginacct
      * @param userpwsd
      * @return
      */
+    @ApiOperation("登录的方法")
+    @PostMapping("/user/doLogin")
     public AppResponse<Object> doLogin(String loginacct ,String userpwsd){
 
-        return AppResponse.ok("登陆成功",null);
+        //1.从数据库中查询出用户信息
+       TMember member= memberService.getMember(loginacct,userpwsd);
+       if(member ==null){
+        return AppResponse.fail(null,"登录信息不正确");
+       }
+       //2.把对象放在redis中，并给它设置一个key
+        String memJson = JSON.toJSONString(member);//传入到redis中需要需要将对象转换成Json，使用fastJson
+        String memJsonToken = UUID.randomUUID().toString().replace("-", ""); //给对象设置一个token
+        redisTemplate.opsForValue().set(memJsonToken , memJson ,7,TimeUnit.DAYS);
+
+        //把key返回给前端,将数据查出来的对象信息+memJsonToken信息一并转移到memberResponseVo中
+        MemberResponseVo memberResponseVo = new MemberResponseVo();
+        BeanUtils.copyProperties(member,memberResponseVo);
+        memberResponseVo.setMemberToken(memJsonToken);
+
+        return AppResponse.ok("登陆成功",memberResponseVo);
     }
 }
