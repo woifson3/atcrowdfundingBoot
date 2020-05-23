@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import sun.swing.plaf.synth.DefaultSynthStyle;
 
 import java.util.List;
 
@@ -67,4 +68,5 @@ public class MemberServiceImpl implements MemberService {
         return member;
     }
 
+    public void Test(){}
 }
