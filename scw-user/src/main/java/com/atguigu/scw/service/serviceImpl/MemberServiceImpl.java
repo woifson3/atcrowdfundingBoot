@@ -3,6 +3,7 @@ package com.atguigu.scw.service.serviceImpl;
 import com.atguigu.scw.Vo.MemberRequestVo;
 import com.atguigu.scw.bean.TMember;
 import com.atguigu.scw.bean.TMemberExample;
+import com.atguigu.scw.common.utils.AppResponse;
 import com.atguigu.scw.mapper.TMemberMapper;
 import com.atguigu.scw.service.MemberService;
 import org.springframework.beans.BeanUtils;
@@ -60,7 +61,7 @@ public class MemberServiceImpl implements MemberService {
         //对输入的密码判断是否真确：userpwsd和数据库中查询到的密码进行对比
         boolean b = bCryptPasswordEncoder.matches(userpwsd, member.getUserpswd());
         if(!b){
-            return null;
+            return ccc;
         }
 
         //擦除重要信息
