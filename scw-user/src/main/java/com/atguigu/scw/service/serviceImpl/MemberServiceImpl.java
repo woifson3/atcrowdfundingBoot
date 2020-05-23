@@ -69,5 +69,7 @@ public class MemberServiceImpl implements MemberService {
         return member;
     }
 
-    public void Test(){}
+    public void Test(){
+        return;
+    }
 }
